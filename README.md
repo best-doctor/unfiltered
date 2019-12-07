@@ -7,3 +7,6 @@
 Miscellaneous scripts Bestdoctor uses. Such as:
 
 - **Pinhead**. Automatization for a problem solving slack channel
+
+
+- **Extractor**. Script for dialogs extraction from Livetex messaging platform
