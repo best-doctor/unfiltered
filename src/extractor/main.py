@@ -28,7 +28,7 @@ async def main(username, password, start, end, output):
 
     dict_writer = csv.DictWriter(output, data[0].keys())
     dict_writer.writeheader()
-    dict_writer.writerows(data)
+    dict_writer.writerows(sorted(data, key=lambda x: x['dialog_start'] + x['timestamp']))
 
 if __name__ == '__main__':
     main(_anyio_backend='asyncio')
