@@ -1,7 +1,8 @@
 from aiohttp import ClientSession, ClientResponse
 import datetime
 import enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
+from type_helpers import Employee
 from backoff import expo, on_predicate
 from config import (
     LIVETEX_BASE_URL, LOGIN_URL, EMPLOYEES_URL,
@@ -25,9 +26,9 @@ class LivetexExtractor:
                  session: ClientSession) -> None:
         self.username = username
         self.password = password
-        self.employees = []
-        self._id = None
-        self._token = None
+        self.employees: List[Employee] = []
+        self._id: Optional[str] = None
+        self._token: Optional[str] = None
         self._session = session
         self._start = start
         self._end = end
@@ -57,8 +58,14 @@ class LivetexExtractor:
         for event in topic['events']:
             if event['eventType'] == EventType.TEXT.value:
                 author, is_client = self._get_message_author(topic, event)
+                metrics = topic['topicMetric']
                 messages.append({
                     'dialog_id': topic_id,
+                    'dialog_start': metrics['openTime'],
+                    'dialog_end': metrics['closeTime'],
+                    'avg_response_time': metrics['answerTime'],  # Avg response time in ms
+                    'reaction_time': metrics['responseTime'],  # Time till first response in ms
+                    'duration': metrics['duration'],  # Dialog duration in ms
                     'text': event['message'],
                     'timestamp': event['ctime'],
                     'author': author,
@@ -82,18 +89,20 @@ class LivetexExtractor:
         async with session.get(EMPLOYEES_URL, params=params, headers=headers) as resp:
             self.employees = await resp.json()
 
-    def _get_message_author(self, topic, event) -> Optional[Tuple[str, bool]]:
+    def _get_message_author(self, topic, event) -> Tuple[str, bool]:
         creator = event['creator']
         if creator['creatorType'] == EventCreator.EMPLOYEE.value:
             return self._get_employee(creator['userId']), False
         elif creator['creatorType'] == EventCreator.CLIENT.value:
             return topic['discourserName'], True
-        return None
+        else:
+            return creator['userId'], False
 
-    def _get_employee(self, employee_id: str) -> Optional[str]:
+    def _get_employee(self, employee_id: str) -> str:
         for employee in self.employees:
             if str(employee['id']) == employee_id:
                 return ' '.join([employee['last_name'], employee['first_name']])
+        return employee_id
 
     @on_predicate(expo, lambda x: x.status != 200, max_time=BACKOFF_MAX_TIME)
     async def _make_request(self, method: str, params) -> ClientResponse:
