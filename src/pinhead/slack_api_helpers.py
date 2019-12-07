@@ -5,8 +5,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from my_types import Message
-from local_config import (SLACK_TOKEN, SLACK_CHANNEL_ID, DEBUG_SLACK_CHANNEL_ID,
-                          IS_DEBUG_ENABLED, SLACK_HOOK_URL)
+from local_config import (SLACK_TOKEN, SLACK_CHANNEL_ID, DEBUG_SLACK_CHANNEL_ID, IS_DEBUG_ENABLED)
 
 channel_id = DEBUG_SLACK_CHANNEL_ID if IS_DEBUG_ENABLED else SLACK_CHANNEL_ID
 
@@ -43,8 +42,11 @@ def get_message_permalink(message_ts: Optional[str]) -> str:
 
 
 def send_message(channel_id: str, message: str) -> None:
-    payload = {
-        'text': message,
-        'channel': channel_id,
-    }
-    requests.post(SLACK_HOOK_URL, json=payload)
+    requests.post(
+        'https://slack.com/api/chat.postMessage',
+        params={
+            'token': SLACK_TOKEN,
+            'channel': channel_id,
+            'text': message,
+        },
+    )
