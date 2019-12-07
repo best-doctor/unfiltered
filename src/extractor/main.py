@@ -18,6 +18,7 @@ async def main(username, password, start, end, output):
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         extractor = LivetexExtractor(username, password, start, end, session)
         await extractor.login(session)
+        await extractor.get_employees(session)
         topics_short = await extractor.get_dialogs_short()
         for topic in topics_short:
             task = asyncio.ensure_future(extractor.get_dialog_info(topic['topicId']))

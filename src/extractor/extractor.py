@@ -1,11 +1,12 @@
 from aiohttp import ClientSession, ClientResponse
 import datetime
 import enum
-from typing import Optional
+from typing import Optional, Tuple
 from backoff import expo, on_predicate
 from config import (
-    LIVETEX_BASE_URL, LOGIN_URL, DIALOGS_URL,
-    DIALOG_INFO, MAX_LIMIT, BACKOFF_MAX_TIME,
+    LIVETEX_BASE_URL, LOGIN_URL, EMPLOYEES_URL,
+    DIALOGS_URL, DIALOG_INFO,
+    MAX_LIMIT, BACKOFF_MAX_TIME,
 )
 
 
@@ -24,6 +25,9 @@ class LivetexExtractor:
                  session: ClientSession) -> None:
         self.username = username
         self.password = password
+        self.employees = []
+        self._id = None
+        self._token = None
         self._session = session
         self._start = start
         self._end = end
@@ -52,11 +56,13 @@ class LivetexExtractor:
         messages = []
         for event in topic['events']:
             if event['eventType'] == EventType.TEXT.value:
+                author, is_client = self._get_message_author(topic, event)
                 messages.append({
                     'dialog_id': topic_id,
                     'text': event['message'],
                     'timestamp': event['ctime'],
-                    'author': self._get_message_author(topic, event),
+                    'author': author,
+                    'is_from_client': is_client,
                 })
         return messages
 
@@ -70,16 +76,24 @@ class LivetexExtractor:
             self._id = resp.cookies['id'].value
             self._token = resp.cookies['access_token'].value
 
-    def _get_message_author(self, topic, event) -> Optional[str]:
+    async def get_employees(self, session: ClientSession):
+        params = {'include_deleted': 'true'}
+        headers = {'Cookie': 'ng_environment=production-3'}
+        async with session.get(EMPLOYEES_URL, params=params, headers=headers) as resp:
+            self.employees = await resp.json()
+
+    def _get_message_author(self, topic, event) -> Optional[Tuple[str, bool]]:
         creator = event['creator']
         if creator['creatorType'] == EventCreator.EMPLOYEE.value:
-            return self._get_employee(creator['userId'])
+            return self._get_employee(creator['userId']), False
         elif creator['creatorType'] == EventCreator.CLIENT.value:
-            return topic['discourserName']
+            return topic['discourserName'], True
         return None
 
-    def _get_employee(self, employee_id: str) -> str:
-        return employee_id
+    def _get_employee(self, employee_id: str) -> Optional[str]:
+        for employee in self.employees:
+            if str(employee['id']) == employee_id:
+                return ' '.join([employee['last_name'], employee['first_name']])
 
     @on_predicate(expo, lambda x: x.status != 200, max_time=BACKOFF_MAX_TIME)
     async def _make_request(self, method: str, params) -> ClientResponse:
