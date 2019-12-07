@@ -4,8 +4,8 @@ import requests
 from datetime import datetime
 from typing import List, Optional
 
-from my_types import Message
-from local_config import (SLACK_TOKEN, SLACK_CHANNEL_ID, DEBUG_SLACK_CHANNEL_ID, IS_DEBUG_ENABLED)
+from .my_types import Message
+from .local_config import (SLACK_TOKEN, SLACK_CHANNEL_ID, DEBUG_SLACK_CHANNEL_ID, IS_DEBUG_ENABLED)
 
 channel_id = DEBUG_SLACK_CHANNEL_ID if IS_DEBUG_ENABLED else SLACK_CHANNEL_ID
 
