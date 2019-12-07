@@ -12,7 +12,6 @@ class Message(TypedDict, total=False):
     text: str
     user: str
     bot_id: str
-    type: str
     subtype: str
     ts: str
     reactions: List[Reaction]
