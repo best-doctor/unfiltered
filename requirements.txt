@@ -30,3 +30,11 @@ pytest-mock==1.13.0
 pytest-randomly==3.1.0
 pytest-socket==0.3.3
 freezegun==0.3.12
+
+# pinhead
+requests==2.22.0
+
+# extractor
+asyncclick==7.0.9
+aiohttp==3.6.2
+backoff==1.9.2
