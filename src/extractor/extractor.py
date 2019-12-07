@@ -6,7 +6,7 @@ import csv
 from typing import Tuple, Optional
 from asyncclick import command, option, File, DateTime, STRING
 from backoff import expo, on_predicate
-from config import LIVETEX_BASE_URL, LOGIN_URL, DIALOGS_URL, DIALOG_INFO, MAX_LIMIT
+from config import LIVETEX_BASE_URL, LOGIN_URL, DIALOGS_URL, DIALOG_INFO, MAX_LIMIT, BACKOFF_MAX_TIME
 from helpers import flat
 
 
@@ -82,7 +82,7 @@ class LivetexExtractor:
     def _get_employee(self, employee_id: str) -> str:
         return employee_id
 
-    @on_predicate(expo, lambda x: x.status != 200, max_time=60)
+    @on_predicate(expo, lambda x: x.status != 200, max_time=BACKOFF_MAX_TIME)
     async def _make_request(self, method: str, params) -> ClientResponse:
         headers = {'Access-Token': self._token}
         default_params = {'accountId': self._id}
