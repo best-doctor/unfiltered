@@ -6,8 +6,7 @@ from typing import List, Optional
 from .slack_api_helpers import get_channel_messages_for_period
 from .my_types import Message
 
-from .local_config import SLACK_CHANNEL_BOT_ID
-from .config import LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME
+from .config import LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME, SLACK_CHANNEL_BOT_ID
 
 
 def _filter_channel_bot_messages(messages: List[Message]) -> List[Message]:

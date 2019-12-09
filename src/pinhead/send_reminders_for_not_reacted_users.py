@@ -1,7 +1,7 @@
-from slack_api_helpers import send_message, get_message_permalink
-from helpers import get_unreacted_messages_for_period, get_user_id_from_message_text
+from .slack_api_helpers import send_message, get_message_permalink
+from .helpers import get_unreacted_messages_for_period, get_user_id_from_message_text
 
-from config import REACT_REMINDER, REMIND_REACT_FOR_DAYS
+from .config import REACT_REMINDER, REMIND_REACT_FOR_DAYS
 
 
 unreacted_messages = get_unreacted_messages_for_period(REMIND_REACT_FOR_DAYS)
