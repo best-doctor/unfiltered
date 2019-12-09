@@ -1,7 +1,7 @@
 import time
 import requests
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from .my_types import Message
@@ -14,7 +14,7 @@ def _mktime(dt: datetime) -> str:
     return str(time.mktime(dt.timetuple()))
 
 
-def get_channel_messages_for_period(latest: datetime, oldest: datetime) -> List[Message]:
+def _get_channel_messages_for_period(latest: datetime, oldest: datetime) -> List[Message]:
     response_json = requests.get(
         'https://slack.com/api/conversations.history',
         params={
@@ -24,7 +24,18 @@ def get_channel_messages_for_period(latest: datetime, oldest: datetime) -> List[
             'oldest': _mktime(oldest),
         },
     ).json()
-    return response_json['messages']
+    try:
+        messages = response_json['messages']
+    except KeyError:
+        messages = []
+    return messages
+
+
+def get_messages_for_days(days: int = 1) -> List[Message]:
+    end_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_time = end_time - timedelta(days=days)
+
+    return _get_channel_messages_for_period(end_time, start_time)
 
 
 def get_message_permalink(message_ts: Optional[str]) -> str:
@@ -38,7 +49,11 @@ def get_message_permalink(message_ts: Optional[str]) -> str:
             'message_ts': message_ts,
         },
     ).json()
-    return response_json['permalink']
+    try:
+        permalink = response_json['permalink']
+    except KeyError:
+        permalink = ''
+    return permalink
 
 
 def send_message(channel_id: str, message: str) -> None:

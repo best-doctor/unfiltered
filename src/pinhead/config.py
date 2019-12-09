@@ -8,7 +8,7 @@ REACT_REMINDER = (
     'please react with emojis right now for {0}'
 )
 
-REMIND_REACT_FOR_DAYS = 1
+REMIND_REACT_FOR_DAYS = 3
 
 IS_DEBUG_ENABLED = False
 

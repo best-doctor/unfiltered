@@ -1,9 +1,7 @@
 import re
 
-from datetime import datetime, timedelta
 from typing import List, Optional
 
-from .slack_api_helpers import get_channel_messages_for_period
 from .my_types import Message
 
 from .config import LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME, SLACK_CHANNEL_BOT_ID
@@ -14,7 +12,7 @@ def _filter_channel_bot_messages(messages: List[Message]) -> List[Message]:
                                     and m.get('bot_id') == SLACK_CHANNEL_BOT_ID)]
 
 
-def _check_message_reactions_do_not_have_reaction(message: Message):
+def _check_message_do_not_have_reaction(message: Message):
     reactions = message.get('reactions')
     if not reactions:
         return True
@@ -25,18 +23,12 @@ def _check_message_reactions_do_not_have_reaction(message: Message):
 
 
 def _filter_unreacted_messages(messages: List[Message]) -> List[Message]:
-    return list(filter(_check_message_reactions_do_not_have_reaction, messages))
+    return list(filter(_check_message_do_not_have_reaction, messages))
 
 
-def get_unreacted_messages_for_period(days: int = 1) -> List[Message]:
-    end_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    start_time = end_time - timedelta(days=days)
-
-    all_messages = get_channel_messages_for_period(
-        end_time, start_time)
+def filter_unreacted_bot_messages(all_messages: List[Message]) -> List[Message]:
     bot_messages = _filter_channel_bot_messages(all_messages)
-    unreacted_bot_messages = _filter_unreacted_messages(bot_messages)
-    return unreacted_bot_messages
+    return _filter_unreacted_messages(bot_messages)
 
 
 def get_user_id_from_message_text(message_text: Optional[str]) -> Optional[str]:

@@ -1,12 +1,13 @@
-from .slack_api_helpers import send_message, get_message_permalink
-from .helpers import get_unreacted_messages_for_period, get_user_id_from_message_text
+from .slack_api import send_message, get_message_permalink, get_messages_for_days
+from .helpers import filter_unreacted_bot_messages, get_user_id_from_message_text
 
 from .config import REACT_REMINDER, REMIND_REACT_FOR_DAYS
 
 
-unreacted_messages = get_unreacted_messages_for_period(REMIND_REACT_FOR_DAYS)
+all_messages = get_messages_for_days(REMIND_REACT_FOR_DAYS)
+unreacted_bot_messages = filter_unreacted_bot_messages(all_messages)
 
-for message in unreacted_messages:
+for message in unreacted_bot_messages:
     user_id = get_user_id_from_message_text(message.get('text'))
     if not user_id:
         continue
