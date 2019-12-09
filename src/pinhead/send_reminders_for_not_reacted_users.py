@@ -1,5 +1,8 @@
 from .slack_api import send_message, get_message_permalink, get_messages_for_days
-from .helpers import filter_unreacted_bot_messages, get_user_id_from_message_text
+
+from .helpers.filter_unreacted_bot_messages import filter_unreacted_bot_messages
+from .helpers.get_user_id_from_message_text import get_user_id_from_message_text
+
 
 from .config import REACT_REMINDER, REMIND_REACT_FOR_DAYS
 

@@ -1,6 +1,8 @@
 import pytest
 
-from pinhead.helpers import get_user_id_from_message_text, filter_unreacted_bot_messages
+from pinhead.helpers.get_user_id_from_message_text import get_user_id_from_message_text
+from pinhead.helpers.filter_unreacted_bot_messages import filter_unreacted_bot_messages
+
 from pinhead.config import SLACK_CHANNEL_BOT_ID
 
 from factories import MessageFactory, ReactionFactory

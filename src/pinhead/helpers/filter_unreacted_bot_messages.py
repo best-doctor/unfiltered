@@ -1,10 +1,8 @@
-import re
+from typing import List
 
-from typing import List, Optional
+from pinhead.my_types import Message
 
-from .my_types import Message
-
-from .config import LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME, SLACK_CHANNEL_BOT_ID
+from pinhead.config import LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME, SLACK_CHANNEL_BOT_ID
 
 
 def _filter_channel_bot_messages(messages: List[Message]) -> List[Message]:
@@ -29,12 +27,3 @@ def _filter_unreacted_messages(messages: List[Message]) -> List[Message]:
 def filter_unreacted_bot_messages(all_messages: List[Message]) -> List[Message]:
     bot_messages = _filter_channel_bot_messages(all_messages)
     return _filter_unreacted_messages(bot_messages)
-
-
-def get_user_id_from_message_text(message_text: Optional[str]) -> Optional[str]:
-    if not message_text:
-        return None
-    wrapper_user_id_array = re.findall(r'<@[\w]*>', message_text)
-    if not wrapper_user_id_array:
-        return None
-    return wrapper_user_id_array[0].replace('<@', '').replace('>', '')
