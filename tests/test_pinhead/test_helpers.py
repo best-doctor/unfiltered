@@ -1,7 +1,10 @@
+import os
 import pytest
+import json
 
 from pinhead.helpers.get_user_id_from_message_text import get_user_id_from_message_text
 from pinhead.helpers.filter_unreacted_bot_messages import filter_unreacted_bot_messages
+from pinhead.helpers.collect_statistics import collect_statistics
 
 from pinhead.config import SLACK_CHANNEL_BOT_ID
 
@@ -93,3 +96,29 @@ def test_filter_unreacted_bot_messages(test_messages, messages_with_reaction_cou
 
     filtered_messages = filter_unreacted_bot_messages(messages)
     assert len(filtered_messages) == messages_with_reaction_count
+
+
+def _load_fixture(fixture_file_name: str) -> any:
+    dirname = os.path.dirname(__file__)
+    fixture_file_path = os.path.join(dirname, f'fixtures/{fixture_file_name}')
+    fixture_file = open(fixture_file_path)
+    fixture_json = fixture_file.read()
+    fixture = json.loads(fixture_json)
+    return fixture
+
+
+@pytest.mark.parametrize("fixtures_file_name, expected_result", [
+    ('messages.json',
+     {
+         'total_count': 12,
+         'rejected': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+         'fixed': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+         'dirty_fixed': {
+             'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+         'planned_to_fix': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+         'nothing': {'total_count': 1, 'liked_count': 0, 'disliked_count': 0}}
+     )
+])
+def test_collect_statistics(fixtures_file_name, expected_result):
+    messages = _load_fixture(fixtures_file_name)
+    assert collect_statistics(messages) == expected_result
