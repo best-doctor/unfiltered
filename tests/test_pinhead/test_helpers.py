@@ -111,11 +111,11 @@ def _load_fixture(fixture_file_name: str) -> any:
     ('messages.json',
      {
          'total_count': 12,
-         'rejected': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
-         'fixed': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+         'rejected': {'total_count': 3, 'liked_count': 1, 'disliked_count': 0},
+         'fixed': {'total_count': 4, 'liked_count': 0, 'disliked_count': 0},
          'dirty_fixed': {
-             'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
-         'planned_to_fix': {'total_count': 0, 'liked_count': 0, 'disliked_count': 0},
+             'total_count': 3, 'liked_count': 2, 'disliked_count': 0},
+         'planned_to_fix': {'total_count': 1, 'liked_count': 0, 'disliked_count': 0},
          'nothing': {'total_count': 1, 'liked_count': 0, 'disliked_count': 0}}
      )
 ])

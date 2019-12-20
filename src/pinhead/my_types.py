@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 from typing_extensions import TypedDict
 
 
@@ -30,3 +30,6 @@ class MessagesStatistics(TypedDict):
     dirty_fixed: MessagesStatisticsByType
     planned_to_fix: MessagesStatisticsByType
     nothing: MessagesStatisticsByType
+
+
+MessageType = Literal['fixed', 'rejected', 'dirty_fixed', 'planned_to_fix', 'nothing']

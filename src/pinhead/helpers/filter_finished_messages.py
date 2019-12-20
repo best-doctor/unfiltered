@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal
+from typing import List
 
 from pinhead.my_types import Message
 from pinhead.helpers.collect_statistics import has_not_any_reaction

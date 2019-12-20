@@ -1,6 +1,7 @@
-from typing import List, Optional, Literal
+from typing import List, Optional
 
-from pinhead.my_types import Message, Reaction, MessagesStatistics, MessagesStatisticsByType
+from pinhead.my_types import (Message, Reaction, MessagesStatistics,
+                              MessagesStatisticsByType, MessageType)
 from pinhead.config import (LIKE_EMOJI_NAME, DISLIKE_EMOJI_NAME,
                             FIX_EMOJI_NAME, DIRTY_FIX_EMOJI_NAME,
                             REJECT_EMOJI_NAME, PLANNED_TO_FIX_EMOJI_NAME)
@@ -17,8 +18,6 @@ default_type_statistics: MessagesStatisticsByType = {
     'liked_count': 0,
     'disliked_count': 0,
 }
-
-MessageType = Literal['fixed', 'rejected', 'dirty_fixed', 'planned_to_fix', 'nothing']
 
 
 def _has_reaction(reactions: Optional[List[Reaction]], reaction_name: str) -> bool:
