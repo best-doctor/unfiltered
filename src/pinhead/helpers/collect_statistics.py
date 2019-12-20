@@ -30,7 +30,7 @@ def _has_reaction(reactions: Optional[List[Reaction]], reaction_name: str) -> bo
     return False
 
 
-def _has_not_any_reaction(reactions: Optional[List[Reaction]]) -> bool:
+def has_not_any_reaction(reactions: Optional[List[Reaction]]) -> bool:
     if not reactions:
         return True
 
@@ -80,7 +80,7 @@ def _count_statistics_by_messages_type(
 
 def collect_statistics(messages: List[Message]) -> MessagesStatistics:
     messages_statistics: MessagesStatistics = {
-        'total_count': len(messages),
+        'total_count': 0,
         'rejected': default_type_statistics.copy(),
         'fixed': default_type_statistics.copy(),
         'dirty_fixed': default_type_statistics.copy(),
@@ -89,14 +89,15 @@ def collect_statistics(messages: List[Message]) -> MessagesStatistics:
     }
 
     for message in messages:
+        messages_statistics['total_count'] += 1
         if not message.get('reactions'):
             messages_statistics['nothing']['total_count'] += 1
             continue
 
-        if _has_not_any_reaction(message.get('reactions')):
+        if has_not_any_reaction(message.get('reactions')):
             messages_statistics = _count_statistics_for_message(
                 message, 'nothing', messages_statistics)
-            break
+            continue
 
         messages_statistics = _count_statistics_by_messages_type(message, messages_statistics)
 
