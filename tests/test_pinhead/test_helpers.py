@@ -91,7 +91,7 @@ def test_filter_finished_messages(fixtures_file_name, expected_result):
 ])
 def test_filter_messages_from_channel_action(fixtures_file_name, expected_result):
     messages = _load_fixture(fixtures_file_name)
-    assert len(filter_messages_from_channel_action(messages)) == expected_result
+    assert len(filter_messages_from_channel_action(messages, 'test_id')) == expected_result
 
 
 @pytest.mark.parametrize("fixtures_file_name, expected_result", [
