@@ -22,6 +22,7 @@ def _get_channel_messages_for_period(latest: datetime, oldest: datetime) -> List
             'channel': channel_id,
             'latest': _mktime(latest),
             'oldest': _mktime(oldest),
+            'limit': '1000',
         },
     ).json()
     try:
@@ -32,7 +33,7 @@ def _get_channel_messages_for_period(latest: datetime, oldest: datetime) -> List
 
 
 def get_messages_for_days(days: int = 1) -> List[Message]:
-    end_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    end_time = datetime.now()
     start_time = end_time - timedelta(days=days)
 
     return _get_channel_messages_for_period(end_time, start_time)
@@ -56,12 +57,13 @@ def get_message_permalink(message_ts: Optional[str]) -> str:
     return permalink
 
 
-def send_message(channel_id: str, message: str) -> None:
+def send_message(channel_id: str, message: str, thread_ts: Optional[str] = None) -> None:
     requests.post(
         'https://slack.com/api/chat.postMessage',
         params={
             'token': SLACK_TOKEN,
             'channel': channel_id,
             'text': message,
+            'thread_ts': thread_ts,
         },
     )

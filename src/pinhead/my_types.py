@@ -32,4 +32,4 @@ class MessagesStatistics(TypedDict):
     nothing: MessagesStatisticsByType
 
 
-MessageType = Literal['fixed', 'rejected', 'dirty_fixed', 'planned_to_fix', 'nothing']
+MessageFinalStatus = Literal['fixed', 'rejected', 'dirty_fixed', 'planned_to_fix', 'nothing']
