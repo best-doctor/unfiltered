@@ -3,12 +3,24 @@ import pytest
 import json
 
 from pinhead.helpers.get_user_id_from_message_text import get_user_id_from_message_text
-from pinhead.helpers.filter_unreacted_bot_messages import filter_unreacted_bot_messages
 from pinhead.helpers.collect_statistics import collect_statistics
+from pinhead.helpers.checkers import include_reactions, include_evaluation, include_final_status
+from pinhead.helpers.filters import (filter_finished_messages,
+                                     filter_messages_from_channel_action,
+                                     filter_not_evaluated_messages)
 
 from pinhead.config import SLACK_CHANNEL_BOT_ID
 
 from factories import MessageFactory, ReactionFactory
+
+
+def _load_fixture(fixture_file_name: str) -> any:
+    dirname = os.path.dirname(__file__)
+    fixture_file_path = os.path.join(dirname, f'fixtures/{fixture_file_name}')
+    fixture_file = open(fixture_file_path)
+    fixture_json = fixture_file.read()
+    fixture = json.loads(fixture_json)
+    return fixture
 
 
 @pytest.mark.parametrize("message_text, user_id", [
@@ -22,89 +34,72 @@ def test_get_user_id_from_message_text(message_text, user_id):
     assert get_user_id_from_message_text(message_text) == user_id
 
 
-@pytest.mark.parametrize("test_messages, messages_with_reaction_count", [
-    ([
-        {
-            'reactions': [{'name': '+1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        },
-        {
-            'reactions': [{'name': '-1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        }
-    ], 0),
-
-    ([
-        {
-            'reactions': [{'name': '+1'}, {'name': 'test'}],
-            'subtype': 'subtytle',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        },
-        {
-            'reactions': [{'name': '1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        }
-    ], 1),
-
-    ([
-        {
-            'reactions': [{'name': '+1'}, {'name': 'test'}],
-            'subtype': 'bot_messages',
-            'bot_id': 'test_bot_id',
-        },
-        {
-            'reactions': [{'name': '-1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': 'tst_bot_id',
-        }
-    ], 0),
-    ([
-        {
-            'reactions': [{'name': '1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        },
-        {
-            'reactions': [{'name': '1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        }
-    ], 2),
-    ([
-        {
-            'reactions': [],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        },
-        {
-            'reactions': [{'name': '1'}, {'name': 'test'}],
-            'subtype': 'bot_message',
-            'bot_id': SLACK_CHANNEL_BOT_ID,
-        }
-    ], 2),
+@pytest.mark.parametrize("reactions, expected_result", [
+    (
+        [{'name': 'x'}, {'name': 'test'}],
+        True
+    ),
+    (
+        [{'name': '-1'}, {'name': 'test'}],
+        False
+    ),
 ])
-def test_filter_unreacted_bot_messages(test_messages, messages_with_reaction_count):
-    messages = []
-    for test_message in test_messages:
-        reactions = [ReactionFactory(name=r['name']) for r in test_message['reactions']]
-        message = MessageFactory(
-            reactions=reactions, subtype=test_message['subtype'], bot_id=test_message['bot_id'])
-        messages.append(message)
-
-    filtered_messages = filter_unreacted_bot_messages(messages)
-    assert len(filtered_messages) == messages_with_reaction_count
+def test_include_final_statuses(reactions, expected_result):
+    assert include_final_status(reactions) == expected_result
 
 
-def _load_fixture(fixture_file_name: str) -> any:
-    dirname = os.path.dirname(__file__)
-    fixture_file_path = os.path.join(dirname, f'fixtures/{fixture_file_name}')
-    fixture_file = open(fixture_file_path)
-    fixture_json = fixture_file.read()
-    fixture = json.loads(fixture_json)
-    return fixture
+@pytest.mark.parametrize("reactions, expected_result", [
+    (
+        [{'name': '+1'}, {'name': 'test'}],
+        True
+    ),
+    (
+        [{'name': 'podorojnik'}, {'name': 'test'}],
+        False
+    ),
+])
+def test_include_evaluation(reactions, expected_result):
+    assert include_evaluation(reactions) == expected_result
+
+
+@pytest.mark.parametrize("reactions, desired_reactions_names, expected_result", [
+    (
+        [{'name': '+1'}, {'name': 'test'}],
+        ['+1'],
+        True
+    ),
+    (
+        [{'name': 'podorojnik'}, {'name': 'test'}],
+        ['-1'],
+        False
+    ),
+])
+def test_include_reactions(reactions, desired_reactions_names, expected_result):
+    assert include_reactions(reactions, desired_reactions_names) == expected_result
+
+
+@pytest.mark.parametrize("fixtures_file_name, expected_result", [
+    ('messages.json', 11)
+])
+def test_filter_finished_messages(fixtures_file_name, expected_result):
+    messages = _load_fixture(fixtures_file_name)
+    assert len(filter_finished_messages(messages)) == expected_result
+
+
+@pytest.mark.parametrize("fixtures_file_name, expected_result", [
+    ('messages.json', 9)
+])
+def test_filter_messages_from_channel_action(fixtures_file_name, expected_result):
+    messages = _load_fixture(fixtures_file_name)
+    assert len(filter_messages_from_channel_action(messages)) == expected_result
+
+
+@pytest.mark.parametrize("fixtures_file_name, expected_result", [
+    ('messages.json', 9)
+])
+def test_filter_not_evaluated_messages(fixtures_file_name, expected_result):
+    messages = _load_fixture(fixtures_file_name)
+    assert len(filter_not_evaluated_messages(messages)) == expected_result
 
 
 @pytest.mark.parametrize("fixtures_file_name, expected_result", [
