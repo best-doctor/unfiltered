@@ -8,7 +8,12 @@
 
 Miscellaneous scripts Bestdoctor uses. Such as:
 
-- **Pinhead**. Automatization for a problem solving slack channel
+### Pinhead.
 
+Automatization for a problem solving slack channel
 
-- **Extractor**. Script for dialogs extraction from Livetex messaging platform
+-   **send_reminders_for_not_reacted_users** Send reminder notifications for users who don't react to message in channel.
+
+### Extractor
+
+Script for dialogs extraction from Livetex messaging platform

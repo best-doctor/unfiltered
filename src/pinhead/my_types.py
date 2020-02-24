@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 from typing_extensions import TypedDict
 
 
@@ -15,3 +15,21 @@ class Message(TypedDict, total=False):
     subtype: str
     ts: str
     reactions: List[Reaction]
+
+
+class MessagesStatisticsByType(TypedDict):
+    total_count: int
+    liked_count: int
+    disliked_count: int
+
+
+class MessagesStatistics(TypedDict):
+    total_count: int
+    rejected: MessagesStatisticsByType
+    fixed: MessagesStatisticsByType
+    dirty_fixed: MessagesStatisticsByType
+    planned_to_fix: MessagesStatisticsByType
+    nothing: MessagesStatisticsByType
+
+
+MessageFinalStatus = Literal['fixed', 'rejected', 'dirty_fixed', 'planned_to_fix', 'nothing']
