@@ -2,14 +2,19 @@
 import asyncio
 from aiohttp import ClientSession, TCPConnector
 import csv
-from asyncclick import command, option, File, DateTime, STRING
+from tqdm import tqdm
+from asyncclick import command, option, File, DateTime
 from helpers import flat
 from extractor import LivetexExtractor
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('backoff').setLevel(logging.ERROR)
 
 
 @command()
-@option('--username', prompt='Enter your username', type=STRING, help='Livetex username')
-@option('--password', prompt='Enter your password', type=STRING, help='Livetex password')
+@option('--username', prompt='Enter your username', help='Livetex username')
+@option('--password', prompt='Enter your password', hide_input=True, help='Livetex password')
 @option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date')
 @option('--end', prompt='End', type=DateTime(), help='Extract messages till this date')
 @option('--output', prompt='Output', type=File('w'), help='Output file')
@@ -17,14 +22,20 @@ async def main(username, password, start, end, output):
     tasks = []
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         extractor = LivetexExtractor(username, password, start, end, session)
+        logging.info('Logging in with the given credentials...')
         await extractor.login(session)
+        logging.info('Successful login!')
+        logging.info('Fetching employee list...')
         await extractor.get_employees(session)
+        logging.info('Employee list received!')
         topics_short = await extractor.get_dialogs_short()
+        topics_count = len(topics_short)
+        logging.info('Fetching %i dialogs...', topics_count)
         for topic in topics_short:
-            task = asyncio.ensure_future(extractor.get_dialog_info(topic['topicId']))
+            task = asyncio.create_task(extractor.get_dialog_info(topic['topicId']))
             tasks.append(task)
 
-        data = flat(await asyncio.gather(*tasks))
+        data = flat([await res for res in tqdm(asyncio.as_completed(tasks), total=topics_count)])
 
     dict_writer = csv.DictWriter(output, data[0].keys())
     dict_writer.writeheader()
