@@ -1,4 +1,5 @@
 from aiohttp import ClientSession, ClientResponse
+import asyncio
 import datetime
 import enum
 from typing import Optional, Tuple, List
@@ -8,6 +9,7 @@ from config import (
     LIVETEX_BASE_URL, LOGIN_URL, EMPLOYEES_URL,
     DIALOGS_URL, DIALOG_INFO,
     MAX_LIMIT, BACKOFF_MAX_TIME,
+    MAX_CONCURRENCY_LEVEL,
 )
 
 
@@ -23,7 +25,7 @@ class EventCreator(enum.Enum):
 class LivetexExtractor:
     def __init__(self, username: str, password: str,
                  start: datetime.datetime, end: datetime.datetime,
-                 session: ClientSession) -> None:
+                 session: ClientSession, concurrency_level: int = MAX_CONCURRENCY_LEVEL) -> None:
         self.username = username
         self.password = password
         self.employees: List[Employee] = []
@@ -32,6 +34,7 @@ class LivetexExtractor:
         self._session = session
         self._start = start
         self._end = end
+        self._sem = asyncio.Semaphore(concurrency_level)
 
     async def get_dialogs_short(self, limit: int = MAX_LIMIT):
         params = {
@@ -109,4 +112,5 @@ class LivetexExtractor:
         headers = {'Access-Token': self._token}
         default_params = {'accountId': self._id}
         default_params.update(params)
-        return await self._session.get(method, params=default_params, headers=headers)
+        async with self._sem:
+            return await self._session.get(method, params=default_params, headers=headers)

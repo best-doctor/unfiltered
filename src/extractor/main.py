@@ -3,8 +3,9 @@ import asyncio
 from aiohttp import ClientSession, TCPConnector
 import csv
 from tqdm import tqdm
-from asyncclick import command, option, File, DateTime
+from asyncclick import command, option, File, DateTime, INT
 from helpers import flat
+from config import MAX_CONCURRENCY_LEVEL
 from extractor import LivetexExtractor
 import logging
 
@@ -18,10 +19,14 @@ logging.getLogger('backoff').setLevel(logging.ERROR)
 @option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date')
 @option('--end', prompt='End', type=DateTime(), help='Extract messages till this date')
 @option('--output', prompt='Output', type=File('w'), help='Output file')
-async def main(username, password, start, end, output):
+@option('--njobs', type=INT, default=MAX_CONCURRENCY_LEVEL, help='Set max concurrency level')
+async def main(username, password, start, end, output, njobs):
     tasks = []
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
-        extractor = LivetexExtractor(username, password, start, end, session)
+        extractor = LivetexExtractor(
+            username, password, start, end, session,
+            concurrency_level=njobs,
+        )
         logging.info('Logging in with the given credentials...')
         await extractor.login(session)
         logging.info('Successful login!')
