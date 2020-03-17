@@ -1,5 +1,6 @@
 
 import asyncio
+import datetime
 from aiohttp import ClientSession, TCPConnector
 import csv
 from tqdm import tqdm
@@ -16,12 +17,15 @@ logging.getLogger('backoff').setLevel(logging.ERROR)
 @command()
 @option('--username', prompt='Enter your username', help='Livetex username')
 @option('--password', prompt='Enter your password', hide_input=True, help='Livetex password')
-@option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date')
-@option('--end', prompt='End', type=DateTime(), help='Extract messages till this date')
+# @option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date', default=(datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%S'))
+# @option('--end', prompt='End', type=DateTime(), help='Extract messages till this date', default=datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
 @option('--output', prompt='Output', type=File('w'), help='Output file')
 @option('--njobs', type=INT, default=MAX_CONCURRENCY_LEVEL, help='Set max concurrency level')
-async def main(username, password, start, end, output, njobs):
+async def main(username, password, output, njobs):
     tasks = []
+    data = []
+    start = datetime.datetime.now() - datetime.timedelta(seconds=1)
+    end = datetime.datetime.now()
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         extractor = LivetexExtractor(
             username, password, start, end, session,
@@ -34,17 +38,21 @@ async def main(username, password, start, end, output, njobs):
         await extractor.get_employees(session)
         logging.info('Employee list received!')
         topics_short = await extractor.get_dialogs_short()
+        if not topics_short:
+            return
         topics_count = len(topics_short)
         logging.info('Fetching %i dialogs...', topics_count)
         for topic in topics_short:
             task = asyncio.create_task(extractor.get_dialog_info(topic['topicId']))
             tasks.append(task)
-
-        data = flat([await res for res in tqdm(asyncio.as_completed(tasks), total=topics_count)])
-
-    dict_writer = csv.DictWriter(output, data[0].keys())
-    dict_writer.writeheader()
-    dict_writer.writerows(sorted(data, key=lambda x: x['dialog_start'] + x['timestamp']))
+        try:
+            for res in tqdm(asyncio.as_completed(tasks), total=topics_count):
+                data.append(await res)
+        finally:
+            data = flat(data)
+            dict_writer = csv.DictWriter(output, data[0].keys())
+            dict_writer.writeheader()
+            dict_writer.writerows(sorted(data, key=lambda x: x['dialog_start'] + x['timestamp']))
 
 if __name__ == '__main__':
     main(_anyio_backend='asyncio')

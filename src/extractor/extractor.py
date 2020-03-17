@@ -4,7 +4,7 @@ import datetime
 import enum
 from typing import Optional, Tuple, List
 from type_helpers import Employee
-from backoff import expo, on_predicate
+from backoff import expo, on_predicate, on_exception
 from config import (
     LIVETEX_BASE_URL, LOGIN_URL, EMPLOYEES_URL,
     DIALOGS_URL, DIALOG_INFO,
@@ -108,6 +108,7 @@ class LivetexExtractor:
         return employee_id
 
     @on_predicate(expo, lambda x: x.status != 200, max_time=BACKOFF_MAX_TIME)
+    @on_exception(expo, asyncio.TimeoutError, max_time=BACKOFF_MAX_TIME)
     async def _make_request(self, method: str, params) -> ClientResponse:
         headers = {'Access-Token': self._token}
         default_params = {'accountId': self._id}
