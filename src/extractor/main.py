@@ -1,6 +1,5 @@
 
 import asyncio
-import datetime
 from aiohttp import ClientSession, TCPConnector
 import csv
 from tqdm import tqdm
@@ -17,15 +16,13 @@ logging.getLogger('backoff').setLevel(logging.ERROR)
 @command()
 @option('--username', prompt='Enter your username', help='Livetex username')
 @option('--password', prompt='Enter your password', hide_input=True, help='Livetex password')
-# @option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date', default=(datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%S'))
-# @option('--end', prompt='End', type=DateTime(), help='Extract messages till this date', default=datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
+@option('--start', prompt='Start', type=DateTime(), help='Start extracting from this date')
+@option('--end', prompt='End', type=DateTime(), help='Extract messages till this date')
 @option('--output', prompt='Output', type=File('w'), help='Output file')
 @option('--njobs', type=INT, default=MAX_CONCURRENCY_LEVEL, help='Set max concurrency level')
-async def main(username, password, output, njobs):
+async def main(username, password, start, end, output, njobs):
     tasks = []
     data = []
-    start = datetime.datetime.now() - datetime.timedelta(seconds=1)
-    end = datetime.datetime.now()
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         extractor = LivetexExtractor(
             username, password, start, end, session,
