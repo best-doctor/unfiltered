@@ -56,7 +56,7 @@ class LivetexExtractor:
         }
         resp = await self._make_request(LIVETEX_BASE_URL + DIALOG_INFO, params)
         data = await resp.json()
-        topic = data['topics'][0]
+        topic = [topic for topic in data['topics'] if topic['id'] == topic_id][0]
         messages = []
         for event in topic['events']:
             if event['eventType'] == EventType.TEXT.value:
