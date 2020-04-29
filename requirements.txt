@@ -42,5 +42,5 @@ backoff==1.9.2
 tqdm==4.43.0
 
 # vpn_sender
-python-dotenv
-slackclient
+python-dotenv==0.13.0
+slackclient==2.5.0
