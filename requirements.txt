@@ -40,3 +40,7 @@ asyncclick==7.0.9
 aiohttp==3.6.2
 backoff==1.9.2
 tqdm==4.43.0
+
+# vpn_sender
+python-dotenv
+slackclient
