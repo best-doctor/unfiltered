@@ -69,7 +69,7 @@ def make_config(user_list, playbook_path, _hosts):
             'ansible-playbook',
             '-i {},'.format(_hosts),
             '-e',
-            '{}'.format(json.dumps({'users_to_create': ['test556', 'test557']})),
+            '{}'.format(json.dumps({'users_to_create': user_list})),
             '{}'.format(playbook_path),
             '-vvvv'
         ]
