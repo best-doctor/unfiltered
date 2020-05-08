@@ -9,10 +9,8 @@ from dotenv import load_dotenv
 
 MESSAGE_TEXT = 'Привет!\nЭто — твой конфиг для настройки ВПНки. Она нужна для доступа ' \
                'к внутренним ресурсам Бестдоктора из дома (например, к админке). ' \
-               'Настраивать ВПНку будет @Nikita Druzhinin, он написал об этом пост ' \
-               'в коммьюнити: {}\n\n' \
                'Если у тебя уже настроена ВПНка, то ничего делать не надо, а ' \
-               'это сообщение можно проигнорировать.'.format(os.getenv('LINK'))
+               'это сообщение можно проигнорировать.'
 EXISTING_VPN_DIR = 'vpn_profiles'
 NEW_VPN_DIR = 'bulk_creation'
 
@@ -78,14 +76,16 @@ def make_config(user_list, playbook_path, _hosts):
     print(data)
 
 
-def send_message(chat_id, path_to_file=NEW_VPN_DIR, text=MESSAGE_TEXT):
-    client.files_upload(
+def send_message(chat_id, path_to_file, text=MESSAGE_TEXT):
+    response = client.files_upload(
         channels=chat_id,
         file=path_to_file,
         title=os.path.basename(path_to_file),
         filename=os.path.basename(path_to_file),
-        initial_comment=text,
+        initial_comment=text
     )
+    print(chat_id, path_to_file, os.path.basename(path_to_file), os.path.basename(path_to_file))
+    print(response)
 
 
 def move_files():
@@ -116,5 +116,6 @@ if __name__ == '__main__':
     for user_to_send in users_to_send:
         for slack_user in slack_users:
             if slack_user['name'] == user_to_send:
-                send_message(slack_user['id'])
+                path_file = os.path.join(NEW_VPN_DIR, (slack_user['name'] + '.ovpn'))
+                send_message(slack_user['id'], path_to_file=path_file)
     move_files()
