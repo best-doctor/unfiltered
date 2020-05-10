@@ -25,14 +25,14 @@ async def main(username, password, start, end, output, njobs):
     data = []
     async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         extractor = LivetexExtractor(
-            username, password, start, end, session,
+            start, end, session,
             concurrency_level=njobs,
         )
         logging.info('Logging in with the given credentials...')
-        await extractor.login(session)
+        await extractor.login(username, password)
         logging.info('Successful login!')
         logging.info('Fetching employee list...')
-        await extractor.get_employees(session)
+        await extractor.get_employees()
         logging.info('Employee list received!')
         topics_short = await extractor.get_dialogs_short()
         if not topics_short:

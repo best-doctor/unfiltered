@@ -2,7 +2,7 @@ from aiohttp import ClientSession, ClientResponse
 import asyncio
 import datetime
 import enum
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
 from type_helpers import Employee
 from backoff import expo, on_predicate, on_exception
 from config import (
@@ -23,11 +23,8 @@ class EventCreator(enum.Enum):
 
 
 class LivetexExtractor:
-    def __init__(self, username: str, password: str,
-                 start: datetime.datetime, end: datetime.datetime,
+    def __init__(self, start: datetime.datetime, end: datetime.datetime,
                  session: ClientSession, concurrency_level: int = MAX_CONCURRENCY_LEVEL) -> None:
-        self.username = username
-        self.password = password
         self.employees: List[Employee] = []
         self._id: Optional[str] = None
         self._token: Optional[str] = None
@@ -76,20 +73,20 @@ class LivetexExtractor:
                 })
         return messages
 
-    async def login(self, session: ClientSession):
-        payload = {'username': self.username, 'password': self.password}
+    async def login(self, username: str, password: str):
+        payload = {'username': username, 'password': password}
         headers = {'Cookie': 'ng_environment=production-3'}
-        async with session.post(LOGIN_URL, headers=headers, data=payload) as resp:
+        async with self._session.post(LOGIN_URL, headers=headers, data=payload) as resp:
             status = (await resp.json())['status']
             if status != 'ok':
                 raise ValueError('Wrong credentials')
             self._id = resp.cookies['id'].value
             self._token = resp.cookies['access_token'].value
 
-    async def get_employees(self, session: ClientSession):
+    async def get_employees(self):
         params = {'include_deleted': 'true'}
         headers = {'Cookie': 'ng_environment=production-3'}
-        async with session.get(EMPLOYEES_URL, params=params, headers=headers) as resp:
+        async with self._session.get(EMPLOYEES_URL, params=params, headers=headers) as resp:
             self.employees = await resp.json()
 
     def _get_message_author(self, topic, event) -> Tuple[str, bool]:
@@ -109,7 +106,7 @@ class LivetexExtractor:
 
     @on_predicate(expo, lambda x: x.status != 200, max_time=BACKOFF_MAX_TIME)
     @on_exception(expo, asyncio.TimeoutError, max_time=BACKOFF_MAX_TIME)
-    async def _make_request(self, method: str, params) -> ClientResponse:
+    async def _make_request(self, method: str, params: Dict[str, Any]) -> ClientResponse:
         headers = {'Access-Token': self._token}
         default_params = {'accountId': self._id}
         default_params.update(params)
